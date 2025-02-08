@@ -253,7 +253,7 @@
     .nav-icon { font-size: 1.2rem; }
     .active { color: var(--primary); }
 
-    /* Comments Section (existing) */
+    /* Comments Section */
     .comments-section {
       position: fixed;
       bottom: 0;
@@ -525,7 +525,7 @@
     <div id="sentinel"></div>
   </div>
 
-  <!-- Comments Section (existing) -->
+  <!-- Comments Section -->
   <div class="comments-section" id="commentsSection">
     <div class="comments-header">
       <div class="comments-title">Comments</div>
@@ -646,13 +646,16 @@
      *****************************************/
     let players = [];         // Array to store YT.Player objects
     let playerIdCounter = 0;  // Unique ID counter for players
-    const API_KEY = 'AIzaSyAK7FK5VPVKea0cxj2kqCDiwl92fjYLXVs';  // Replace with your own API key SECONDARY IF NOT WORKING: AIzaSyCTePB1WLpoveNVjyncJ_uCmVutawmUaM0
+    const API_KEY = 'AIzaSyAK7FK5VPVKea0cxj2kqCDiwl92fjYLXVs';  // Replace with your own API key
     const SEARCH_QUERIES = [
       "government news", "politics news", "news", 
       "elections news", "technology news", "conspiracy theories"
     ];
     // For comments – track which video is being commented on.
     let currentCommentVideoId = null;
+
+    // Global cache to store pre-fetched videos
+    let videoCache = [];
 
     /*****************************************
      * UTILITY: Shuffle an array (Fisher–Yates)
@@ -668,21 +671,20 @@
     /*****************************************
      * FETCH VIDEOS FROM YOUTUBE DATA API
      *****************************************/
-    async function getRandomVideos(count) {
+    // Preload a large batch of videos and store in videoCache.
+    async function preloadVideos(batchSize = 50) {
       const query = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
-      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=2&q=${encodeURIComponent(query)}&key=${API_KEY}`;
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${batchSize}&q=${encodeURIComponent(query)}&key=${API_KEY}`;
       try {
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
         if (searchData.items && searchData.items.length) {
-          const selected = shuffleArray(searchData.items).slice(0, count);
-          const videoIds = selected.map(item => item.id.videoId).join(",");
-          return await fetchVideoDetails(videoIds);
+          const videoIds = searchData.items.map(item => item.id.videoId).join(",");
+          const videos = await fetchVideoDetails(videoIds);
+          videoCache = shuffleArray(videos);
         }
-        return [];
       } catch (err) {
-        console.error("Error fetching videos:", err);
-        return [];
+        console.error("Error preloading videos:", err);
       }
     }
 
@@ -816,26 +818,43 @@
      *****************************************/
     function updateVideoRating(container, videoData, forceUpdate = false) {
       const analysis = container.querySelector(".ai-analysis");
-      const ratingSpan = analysis.querySelector(".trust-score span");
+      const trustScoreSpan = analysis.querySelector(".trust-score span");
+      const explanationDiv = analysis.querySelector(".ai-explanation");
+      
+      // Check for cached values (via cookies)
       const cachedRating = getCookie("rating_" + videoData.videoId);
-      if (cachedRating && !forceUpdate) {
-        ratingSpan.textContent = `Trust Score: ${cachedRating}%`;
-        updateTrustIndicator(ratingSpan, Number(cachedRating));
+      const cachedExplanation = getCookie("explanation_" + videoData.videoId);
+      
+      if (cachedRating && cachedExplanation && !forceUpdate) {
+        trustScoreSpan.textContent = `Trust Score: ${cachedRating}%`;
+        updateTrustIndicator(trustScoreSpan, Number(cachedRating));
+        explanationDiv.textContent = cachedExplanation;
       } else {
-        ratingSpan.innerHTML = `Rating in progress... <i class="fas fa-spinner loader"></i>`;
-        getGeminiRating(videoData, forceUpdate).then(newRating => {
-          animateRating(ratingSpan, 0, newRating, 1000);
+        trustScoreSpan.innerHTML = `Rating in progress... <i class="fas fa-spinner loader"></i>`;
+        explanationDiv.textContent = "";
+        // Call the new function to get both rating and explanation.
+        getGeminiRatingAndExplanation(videoData, forceUpdate).then(result => {
+          // Animate the trust score update.
+          animateRating(trustScoreSpan, 0, result.rating, 1000);
+          // After the animation, update the explanation text.
+          setTimeout(() => {
+            explanationDiv.textContent = result.explanation;
+          }, 1000);
         });
       }
     }
 
     /*****************************************
-     * APPEND NEW RANDOM VIDEOS
+     * APPEND NEW VIDEOS FROM CACHE
      *****************************************/
     async function appendRandomVideos(count = 5) {
-      const videos = await getRandomVideos(count);
+      // If our cache is low, preload more videos.
+      if (videoCache.length < count) {
+        await preloadVideos(50);
+      }
+      const videosToAppend = videoCache.splice(0, count);
       const videosContainer = document.getElementById("videos");
-      for (const videoData of videos) {
+      for (const videoData of videosToAppend) {
         const uniqueId = playerIdCounter++;
         const container = createVideoContainer(videoData, uniqueId);
         videosContainer.appendChild(container);
@@ -922,7 +941,6 @@
      * GEMINI AI RATING FUNCTION (with force refresh)
      *****************************************/
     async function getGeminiRating(videoData, forceUpdate = false) {
-      // Check for a cached rating unless a force update is requested.
       if (!forceUpdate) {
         const cached = getCookie("rating_" + videoData.videoId);
         if (cached) return Number(cached);
@@ -932,7 +950,6 @@
       const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
     
-      // Build a richer prompt that references the thumbnail and additional data.
       const promptText = `Please evaluate the following YouTube video for credibility, factual accuracy, and trustworthiness.
     
     Video Title: "${videoData.title}"
@@ -982,6 +999,95 @@
       } catch (error) {
         console.error("Error getting Gemini rating:", error);
         return 0;
+      }
+    }
+    
+    async function getGeminiRatingAndExplanation(videoData, forceUpdate = false) {
+      // If not forcing an update, check for cached rating and explanation
+      if (!forceUpdate) {
+        const cachedRating = getCookie("rating_" + videoData.videoId);
+        const cachedExplanation = getCookie("explanation_" + videoData.videoId);
+        if (cachedRating && cachedExplanation) {
+          return { rating: Number(cachedRating), explanation: cachedExplanation };
+        }
+      }
+      
+      // Get current date and time for extra context
+      const now = new Date();
+      const currentDateString = now.toLocaleDateString('en-US', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      });
+      const currentTimeString = now.toLocaleTimeString();
+    
+      // Set up the Gemini API call (replace geminiApiKey with your valid key if needed)
+      const geminiModel = 'gemini-2.0-flash-thinking-exp-01-21';
+      const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+      
+      // Build a prompt that includes extra context such as the current date and time.
+      // The output is expected to have the rating on the first line and the explanation on the following lines.
+      const promptText = `Please evaluate the following YouTube video for credibility, factual accuracy, and trustworthiness.
+    
+    Video Title: "${videoData.title}"
+    Channel: "${videoData.channelTitle}"
+    Thumbnail URL: ${videoData.thumbnail}
+    Description: ${videoData.description || "No description available."}
+    Published At: ${videoData.publishedAt || "Unknown"}
+    Views: ${videoData.statistics.viewCount || "0"}
+    Likes: ${videoData.statistics.likeCount || "N/A"}
+    Comments: ${videoData.statistics.commentCount || "N/A"}
+    
+    Evaluation Context:
+    Current Date: ${currentDateString}
+    Current Time: ${currentTimeString}
+    
+    Provide on the first line a numeric rating from 0 (not credible) to 100 (highly credible).
+    On the following lines, give a concise explanation (50 words or less) for the rating.`;
+    
+      const promptPayload = {
+        contents: [
+          {
+            parts: [
+              { text: promptText }
+            ]
+          }
+        ]
+      };
+    
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(promptPayload)
+        });
+        if (!response.ok) {
+          throw new Error(`API responded with status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data.candidates || data.candidates.length === 0) {
+          throw new Error("Invalid response structure from Gemini API.");
+        }
+        
+        // Parse the API response.
+        // We expect the first line to contain the numeric rating, and the remaining lines to be the explanation.
+        const output = data.candidates[0].content.parts[0].text;
+        const lines = output.trim().split('\n').filter(line => line.trim() !== "");
+        let rating = 0;
+        let explanation = "";
+        if (lines.length > 0) {
+          const ratingMatch = lines[0].match(/(\d+(\.\d+)?)/);
+          rating = ratingMatch ? Number(ratingMatch[1]) : 0;
+          explanation = lines.slice(1).join(' ').trim();
+        }
+        
+        // Cache the results in cookies (for 1 day)
+        setCookie("rating_" + videoData.videoId, rating, 1);
+        setCookie("explanation_" + videoData.videoId, explanation, 1);
+        
+        return { rating, explanation };
+      } catch (error) {
+        console.error("Error getting Gemini rating and explanation:", error);
+        return { rating: 0, explanation: "Error occurred while fetching explanation." };
       }
     }
 
@@ -1044,7 +1150,6 @@
           const btn = event.target.closest(".like-btn");
           const videoId = btn.dataset.videoId;
           const container = btn.closest(".video-container");
-          // Extract video data from container's dataset
           const videoData = {
             videoId: container.dataset.videoId,
             title: container.dataset.title,
@@ -1065,7 +1170,7 @@
           }
         }
 
-        // Handle Comments: open the comment section.
+        // Open comments section.
         if (event.target.closest(".comments-btn")) {
           const btn = event.target.closest(".comments-btn");
           currentCommentVideoId = btn.dataset.videoId;
@@ -1073,7 +1178,7 @@
           document.getElementById("commentsSection").classList.add("show");
         }
 
-        // Handle Fact-check: force update the Gemini rating.
+        // Fact-check: force update the Gemini rating.
         if (event.target.closest(".fact-check")) {
           const button = event.target.closest(".fact-check");
           const container = button.closest(".video-container");
@@ -1086,7 +1191,7 @@
           updateVideoRating(container, videoData, true);
         }
 
-        // Handle navigation for Search and Liked Videos modals.
+        // Navigation: open Search and Liked Videos modals.
         if (event.target.closest("#navSearch")) {
           document.getElementById("searchSection").classList.add("show");
         }
@@ -1095,11 +1200,10 @@
           document.getElementById("likedVideosSection").classList.add("show");
         }
 
-        // Handle clicking on a liked video in the liked videos modal.
+        // Clicking a liked video scrolls to or appends it.
         if (event.target.closest(".liked-video")) {
           const likedVideoEl = event.target.closest(".liked-video");
           const videoId = likedVideoEl.dataset.videoId;
-          // If video exists in the feed, scroll to it; else append it.
           const existingContainer = document.querySelector(`.video-container[data-video-id="${videoId}"]`);
           if (existingContainer) {
             existingContainer.scrollIntoView({ behavior: "smooth" });
@@ -1109,11 +1213,10 @@
           document.getElementById("likedVideosSection").classList.remove("show");
         }
 
-        // Handle clicking on a search result.
+        // Clicking a search result.
         if (event.target.closest(".search-result")) {
           const resultEl = event.target.closest(".search-result");
           const videoId = resultEl.dataset.videoId;
-          // If video exists in the feed, scroll to it; else append it.
           const existingContainer = document.querySelector(`.video-container[data-video-id="${videoId}"]`);
           if (existingContainer) {
             existingContainer.scrollIntoView({ behavior: "smooth" });
@@ -1131,20 +1234,18 @@
         }
       });
 
-      // Close comments section.
+      // Close modals.
       document.getElementById("closeComments").addEventListener("click", () => {
         document.getElementById("commentsSection").classList.remove("show");
       });
-      // Close liked videos section.
       document.getElementById("closeLikedVideos").addEventListener("click", () => {
         document.getElementById("likedVideosSection").classList.remove("show");
       });
-      // Close search section.
       document.getElementById("closeSearch").addEventListener("click", () => {
         document.getElementById("searchSection").classList.remove("show");
       });
 
-      // Handle posting a new comment.
+      // Post a new comment.
       document.getElementById("submitComment").addEventListener("click", () => {
         const input = document.getElementById("commentInput");
         const text = input.value.trim();
@@ -1165,7 +1266,7 @@
         updateCommentCount(currentCommentVideoId);
       });
 
-      // Handle search execution.
+      // Execute search.
       document.getElementById("executeSearch").addEventListener("click", async () => {
         const query = document.getElementById("searchInput").value.trim();
         if (!query) return;
@@ -1174,7 +1275,7 @@
       });
     }
 
-    // Append a video to the feed using videoData.
+    // Append video to feed from videoData.
     function appendVideoToFeedObj(videoData) {
       const videosContainer = document.getElementById("videos");
       const uniqueId = playerIdCounter++;
@@ -1187,7 +1288,6 @@
       updateVideoRating(container, videoData);
     }
 
-    // Append video by videoId; if data attributes are available, use them.
     async function appendVideoToFeed(videoId, dataAttrs = {}) {
       if (dataAttrs && dataAttrs.title && dataAttrs.channel) {
         const videoData = {
@@ -1220,7 +1320,6 @@
       }
     }
 
-    // Load liked videos into the liked videos modal.
     function loadLikedVideos() {
       const likedVideosList = document.getElementById("likedVideosList");
       likedVideosList.innerHTML = "";
@@ -1244,7 +1343,6 @@
       });
     }
 
-    // Display search results in the search modal.
     function displaySearchResults(results) {
       const searchResults = document.getElementById("searchResults");
       searchResults.innerHTML = "";
@@ -1290,6 +1388,7 @@
      * INITIALIZATION WHEN YOUTUBE IFRAME API IS READY
      *****************************************/
     function onYouTubeIframeAPIReady() {
+      // Start by appending an initial batch of videos.
       appendRandomVideos(10);
       initVideoObserver();
       initSentinelObserver();
