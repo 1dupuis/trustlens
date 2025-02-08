@@ -11,7 +11,7 @@
   /* IMPORT FONT */
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-  /* ==========================================================================
+  /* ==========================================================================  
      ROOT VARIABLES & GLOBAL SETTINGS -
      ========================================================================== */
   :root {
@@ -36,7 +36,7 @@
     --padding: 1rem; /* 16px */
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      GLOBAL RESET & BASE STYLES
      ========================================================================== */
   *,
@@ -58,7 +58,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      MAIN CONTAINER & SCROLL SETTINGS
      ========================================================================== */
   .app-container {
@@ -74,7 +74,7 @@
     display: none;
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      VIDEO FEED & CONTAINERS
      ========================================================================== */
   #videos {
@@ -95,7 +95,7 @@
     object-fit: cover;
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      VIDEO INFO OVERLAY & TEXT STYLES
      ========================================================================== */
   .video-info {
@@ -148,7 +148,7 @@
     gap: 1rem;
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      AI ANALYSIS CARD & TRUST SCORE
      ========================================================================== */
   .ai-analysis {
@@ -168,6 +168,7 @@
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     font-weight: 500;
+    cursor: pointer; /* Indicate clickable for details */
   }
   .trust-indicator {
     width: 8px;
@@ -205,9 +206,10 @@
     color: var(--text-secondary);
     line-height: 1.6;
     letter-spacing: 0.01em;
+    display: none;  /* Hide explanation text by default */
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      SIDE ACTION BUTTONS (LIKE, COMMENT, FACT-CHECK)
      ========================================================================== */
   .side-actions {
@@ -270,7 +272,7 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      NAVIGATION BAR
      ========================================================================== */
   .navigation {
@@ -326,7 +328,7 @@
     border-radius: 50%;
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      MODAL SECTIONS: COMMENTS, LIKED VIDEOS & SEARCH
      ========================================================================== */
   .comments-section,
@@ -395,7 +397,7 @@
     transform: rotate(90deg);
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      COMMENTS LIST & COMMENT ITEMS
      ========================================================================== */
   #commentsList {
@@ -490,7 +492,7 @@
     transform: translateY(0);
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      LIKED VIDEOS SECTION
      ========================================================================== */
   #likedVideosList .liked-video {
@@ -529,7 +531,7 @@
     color: var(--text-secondary);
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      SEARCH SECTION
      ========================================================================== */
   .search-input-container {
@@ -624,7 +626,7 @@
     gap: 0.5rem;
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      ANIMATIONS
      ========================================================================== */
   @keyframes pulse {
@@ -677,7 +679,7 @@
     }
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      CUSTOM SCROLLBAR (WEBKIT)
      ========================================================================== */
   ::-webkit-scrollbar {
@@ -696,7 +698,7 @@
     background: var(--glass-border);
   }
 
-  /* ==========================================================================
+  /* ==========================================================================  
      RESPONSIVE DESIGN & DEVICE FIT
      ========================================================================== */
   @media (max-width: 1024px) {
@@ -754,8 +756,7 @@
       bottom: 8.5rem;
     }
   }
-</style>
-
+  </style>
 </head>
 <body>
   <!-- Main app container -->
@@ -1065,7 +1066,7 @@
       const cachedExplanation = getCookie("explanation_" + videoData.videoId);
       
       if (cachedRating && cachedExplanation && !forceUpdate) {
-        trustScoreSpan.textContent = `Trust Score: ${cachedRating}%`;
+        trustScoreSpan.textContent = `Trust Score: ${cachedRating}% (click for details)`;
         updateTrustIndicator(trustScoreSpan, Number(cachedRating));
         explanationDiv.textContent = cachedExplanation;
       } else {
@@ -1084,65 +1085,6 @@
     }
 
     /*****************************************
-     * APPEND NEW VIDEOS FROM CACHE
-     *****************************************/
-    async function appendRandomVideos(count = 5) {
-      // If our cache is low, preload more videos.
-      if (videoCache.length < count) {
-        await preloadVideos(50);
-      }
-      const videosToAppend = videoCache.splice(0, count);
-      const videosContainer = document.getElementById("videos");
-      for (const videoData of videosToAppend) {
-        const uniqueId = playerIdCounter++;
-        const container = createVideoContainer(videoData, uniqueId);
-        videosContainer.appendChild(container);
-        initPlayer(uniqueId, videoData);
-        if (videoObserver) {
-          videoObserver.observe(container);
-        }
-        // Update UI based on stored like/comment cookies.
-        const likeCookie = getCookie("like_" + videoData.videoId);
-        if (likeCookie === "true") {
-          const likeBtn = container.querySelector(".like-btn");
-          likeBtn.classList.add("liked");
-          likeBtn.querySelector(".action-count").textContent = "1";
-        }
-        const commentCookie = getCookie("comments_" + videoData.videoId);
-        if (commentCookie) {
-          try {
-            const commentsArr = JSON.parse(commentCookie);
-            const commentBtn = container.querySelector(".comments-btn");
-            commentBtn.querySelector(".action-count").textContent = commentsArr.length;
-          } catch (e) {
-            console.error("Error parsing comments cookie:", e);
-          }
-        }
-        updateVideoRating(container, videoData);
-      }
-    }
-
-    /*****************************************
-     * AUTO-PLAY / PAUSE VIA INTERSECTION OBSERVER
-     *****************************************/
-    let videoObserver;
-    function initVideoObserver() {
-      const options = { root: null, threshold: 0.8 };
-      videoObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          players.forEach(p => {
-            if (p.container === entry.target) {
-              entry.isIntersecting ? p.playVideo() : p.pauseVideo();
-            }
-          });
-        });
-      }, options);
-      document.querySelectorAll('.video-container').forEach(container => {
-        videoObserver.observe(container);
-      });
-    }
-
-    /*****************************************
      * DYNAMIC RATING ANIMATION FUNCTIONS
      *****************************************/
     function animateRating(ratingElement, start, end, duration) {
@@ -1156,7 +1098,7 @@
         if (progress < duration) {
           window.requestAnimationFrame(step);
         } else {
-          ratingElement.textContent = `Trust Score: ${end}%`;
+          ratingElement.textContent = `Trust Score: ${end}% (click for details)`;
           updateTrustIndicator(ratingElement, end);
         }
       }
@@ -1214,7 +1156,7 @@
     Current Date: ${currentDateString}
     
     Provide on the first line a numeric rating from 0 (not credible) to 100 (highly credible).
-    On the following lines, give a concise explanation (50 words or less) for the rating.`;
+    On the following lines, give a concise explanation (100 words or less) for the rating.`;
     
       const promptPayload = {
         contents: [
@@ -1458,6 +1400,7 @@
         videoObserver.observe(container);
       }
       updateVideoRating(container, videoData);
+      attachTrustScoreToggle(container);
     }
 
     async function appendVideoToFeed(videoId, dataAttrs = {}) {
@@ -1542,6 +1485,44 @@
     }
 
     /*****************************************
+     * ATTACH CLICK HANDLER TO TOGGLE TRUST SCORE EXPLANATION
+     *****************************************/
+    function attachTrustScoreToggle(container) {
+      const trustScoreElem = container.querySelector('.trust-score');
+      if (trustScoreElem) {
+        trustScoreElem.style.cursor = 'pointer';
+        trustScoreElem.addEventListener('click', function() {
+          const explanationDiv = container.querySelector('.ai-explanation');
+          if (explanationDiv.style.display === 'none' || explanationDiv.style.display === '') {
+             explanationDiv.style.display = 'block';
+          } else {
+             explanationDiv.style.display = 'none';
+          }
+        });
+      }
+    }
+
+    /*****************************************
+     * AUTO-PLAY / PAUSE VIA INTERSECTION OBSERVER
+     *****************************************/
+    let videoObserver;
+    function initVideoObserver() {
+      const options = { root: null, threshold: 0.8 };
+      videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          players.forEach(p => {
+            if (p.container === entry.target) {
+              entry.isIntersecting ? p.playVideo() : p.pauseVideo();
+            }
+          });
+        });
+      }, options);
+      document.querySelectorAll('.video-container').forEach(container => {
+        videoObserver.observe(container);
+      });
+    }
+
+    /*****************************************
      * SENTINEL OBSERVER FOR INFINITE SCROLL
      *****************************************/
     function initSentinelObserver() {
@@ -1554,6 +1535,46 @@
         });
       });
       observer.observe(sentinel);
+    }
+
+    /*****************************************
+     * APPEND NEW VIDEOS FROM CACHE
+     *****************************************/
+    async function appendRandomVideos(count = 5) {
+      // If our cache is low, preload more videos.
+      if (videoCache.length < count) {
+        await preloadVideos(50);
+      }
+      const videosToAppend = videoCache.splice(0, count);
+      const videosContainer = document.getElementById("videos");
+      for (const videoData of videosToAppend) {
+        const uniqueId = playerIdCounter++;
+        const container = createVideoContainer(videoData, uniqueId);
+        videosContainer.appendChild(container);
+        initPlayer(uniqueId, videoData);
+        if (videoObserver) {
+          videoObserver.observe(container);
+        }
+        // Update UI based on stored like/comment cookies.
+        const likeCookie = getCookie("like_" + videoData.videoId);
+        if (likeCookie === "true") {
+          const likeBtn = container.querySelector(".like-btn");
+          likeBtn.classList.add("liked");
+          likeBtn.querySelector(".action-count").textContent = "1";
+        }
+        const commentCookie = getCookie("comments_" + videoData.videoId);
+        if (commentCookie) {
+          try {
+            const commentsArr = JSON.parse(commentCookie);
+            const commentBtn = container.querySelector(".comments-btn");
+            commentBtn.querySelector(".action-count").textContent = commentsArr.length;
+          } catch (e) {
+            console.error("Error parsing comments cookie:", e);
+          }
+        }
+        updateVideoRating(container, videoData);
+        attachTrustScoreToggle(container);
+      }
     }
 
     /*****************************************
