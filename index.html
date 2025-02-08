@@ -3,759 +3,782 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>trustlens</title>
+  <title>TrustLens AI Enhanced</title>
   <!-- Font Awesome & Animate.css for icons/animations -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
   <style>
-  /* IMPORT FONT */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    /* IMPORT FONT */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-  /* ==========================================================================  
-     ROOT VARIABLES & GLOBAL SETTINGS -
-     ========================================================================== */
-  :root {
-    --primary: #fe2c55;
-    --primary-hover: #ff4d70;
-    --secondary: #25f4ee;
-    --background: #121212;
-    --surface: #1e1e1e;
-    --text: #ffffff;
-    --text-secondary: #a8a8a8;
-    --trust-high: #22c55e;
-    --trust-medium: #f59e0b;
-    --trust-low: #ef4444;
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.05);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --font-base: 'Inter', sans-serif;
-    --border-radius: 8px;
-    --modal-radius: 20px 20px 0 0;
-    --padding: 1rem; /* 16px */
-  }
-
-  /* ==========================================================================  
-     GLOBAL RESET & BASE STYLES
-     ========================================================================== */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  body {
-    font-family: var(--font-base);
-    background: var(--background);
-    color: var(--text);
-    line-height: 1.5;
-    overflow: hidden;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ==========================================================================  
-     MAIN CONTAINER & SCROLL SETTINGS
-     ========================================================================== */
-  .app-container {
-    width: 100%;
-    height: 100vh;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-    position: relative;
-    scrollbar-width: none;
-  }
-  .app-container::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* ==========================================================================  
-     VIDEO FEED & CONTAINERS
-     ========================================================================== */
-  #videos {
-    display: flex;
-    flex-direction: column;
-  }
-  .video-container {
-    position: relative;
-    height: 100vh;
-    scroll-snap-align: start;
-    background: var(--surface);
-    overflow: hidden;
-    will-change: transform;
-  }
-  .video-container iframe {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  /* ==========================================================================  
-     VIDEO INFO OVERLAY & TEXT STYLES
-     ========================================================================== */
-  .video-info {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1.5rem;
-    background: linear-gradient(transparent, rgba(0, 0, 0, 0.95));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-  .user-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--glass-bg);
-    border: 2px solid var(--primary);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow);
-  }
-  .username {
-    font-weight: 600;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-  .caption {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    line-height: 1.6;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-  .video-stats {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    display: flex;
-    gap: 1rem;
-  }
-
-  /* ==========================================================================  
-     AI ANALYSIS CARD & TRUST SCORE
-     ========================================================================== */
-  .ai-analysis {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    animation: fadeIn 0.3s ease;
-    box-shadow: var(--shadow);
-  }
-  .trust-score {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    font-weight: 500;
-    cursor: pointer; /* Indicate clickable for details */
-  }
-  .trust-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    position: relative;
-    box-shadow: 0 0 10px currentColor;
-  }
-  .trust-indicator::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 50%;
-    background: inherit;
-    opacity: 0.3;
-    animation: pulse 2s infinite;
-  }
-  .high-trust {
-    background: var(--trust-high);
-    color: var(--trust-high);
-  }
-  .medium-trust {
-    background: var(--trust-medium);
-    color: var(--trust-medium);
-  }
-  .low-trust {
-    background: var(--trust-low);
-    color: var(--trust-low);
-  }
-  .ai-explanation {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    letter-spacing: 0.01em;
-    display: none;  /* Hide explanation text by default */
-  }
-
-  /* ==========================================================================  
-     SIDE ACTION BUTTONS (LIKE, COMMENT, FACT-CHECK)
-     ========================================================================== */
-  .side-actions {
-    position: absolute;
-    right: 1rem;
-    bottom: 11.25rem; /* approx. 180px */
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    z-index: 10;
-    padding: 0.25rem;
-  }
-  .action-button {
-    background: none;
-    border: none;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    cursor: pointer;
-    transition: var(--transition);
-    padding: 0.25rem;
-  }
-  .action-button:hover {
-    transform: scale(1.1);
-  }
-  .action-button:active {
-    transform: scale(0.95);
-  }
-  .action-icon {
-    width: 56px;
-    height: 56px;
-    background: var(--glass-bg);
-    border: 2px solid var(--glass-border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: var(--transition);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  .like-btn.liked .action-icon {
-    background: var(--primary);
-    border-color: var(--primary-hover);
-    color: var(--trust-high);
-    box-shadow: 0 0 15px var(--primary);
-  }
-  .action-button:hover .action-icon {
-    background: var(--primary);
-    border-color: var(--primary-hover);
-    transform: translateY(-2px);
-  }
-  .action-count {
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-
-  /* ==========================================================================  
-     NAVIGATION BAR
-     ========================================================================== */
-  .navigation {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: var(--surface);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 100;
-    border-top: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.2);
-  }
-  .nav-item {
-    color: var(--text-secondary);
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-  }
-  .nav-item:hover {
-    color: var(--text);
-    transform: translateY(-2px);
-    background: var(--glass-bg);
-  }
-  .nav-icon {
-    font-size: 1.2rem;
-  }
-  .nav-item.active {
-    color: var(--primary);
-    position: relative;
-  }
-  .nav-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: -0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0.25rem;
-    height: 0.25rem;
-    background: var(--primary);
-    border-radius: 50%;
-  }
-
-  /* ==========================================================================  
-     MODAL SECTIONS: COMMENTS, LIKED VIDEOS & SEARCH
-     ========================================================================== */
-  .comments-section,
-  .liked-videos-section,
-  .search-section {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--surface);
-    border-radius: var(--modal-radius);
-    padding: 1.5rem;
-    transition: var(--transition);
-    z-index: 1000;
-    overflow-y: auto;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-  }
-  .comments-section,
-  .liked-videos-section {
-    height: 70%;
-    transform: translateY(100%);
-  }
-  .comments-section.show,
-  .liked-videos-section.show {
-    transform: translateY(0);
-  }
-  .search-section {
-    height: 100%;
-    background: var(--background);
-    transform: translateY(-100%);
-  }
-  .search-section.show {
-    transform: translateY(0);
-  }
-  .comments-header,
-  .liked-videos-header,
-  .search-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--glass-border);
-  }
-  .comments-title,
-  .liked-videos-title,
-  .search-title {
-    font-weight: 600;
-    font-size: 1.1rem;
-  }
-  .close-comments,
-  .close-liked-videos,
-  .close-search {
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: var(--transition);
-  }
-  .close-comments:hover,
-  .close-liked-videos:hover,
-  .close-search:hover {
-    background: var(--glass-bg);
-    transform: rotate(90deg);
-  }
-
-  /* ==========================================================================  
-     COMMENTS LIST & COMMENT ITEMS
-     ========================================================================== */
-  #commentsList {
-    max-height: 60%;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-    padding-right: 0.5rem;
-  }
-  .comment {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 0.5rem;
-    border-radius: 12px;
-    animation: slideInUp 0.3s ease;
-    transition: var(--transition);
-  }
-  .comment:hover {
-    background: var(--glass-bg);
-  }
-  .comment-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--glass-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    border: 1px solid var(--glass-border);
-  }
-  .comment-content {
-    flex: 1;
-  }
-  .comment-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
-  }
-  .comment-username {
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-  .comment-time {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-  }
-  .comment-text {
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
-  }
-  .new-comment {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    border: 1px solid var(--glass-border);
-  }
-  .new-comment input {
-    flex: 1;
-    padding: 0.75rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--glass-border);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 0.9rem;
-    transition: var(--transition);
-  }
-  .new-comment input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary-hover);
-  }
-  .new-comment button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background: var(--primary);
-    color: #fff;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: var(--transition);
-    font-weight: 500;
-  }
-  .new-comment button:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
-  }
-  .new-comment button:active {
-    transform: translateY(0);
-  }
-
-  /* ==========================================================================  
-     LIKED VIDEOS SECTION
-     ========================================================================== */
-  #likedVideosList .liked-video {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-  }
-  #likedVideosList .liked-video:hover {
-    background: var(--glass-bg);
-    transform: translateX(8px);
-  }
-  .liked-video-thumbnail {
-    width: 120px;
-    height: 68px;
-    border-radius: var(--border-radius);
-    object-fit: cover;
-  }
-  .liked-video-info {
-    flex: 1;
-  }
-  .liked-video-title {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .liked-video-channel {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-  }
-
-  /* ==========================================================================  
-     SEARCH SECTION
-     ========================================================================== */
-  .search-input-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    border: 1px solid var(--glass-border);
-  }
-  .search-input-container input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--glass-border);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 0.95rem;
-    transition: var(--transition);
-  }
-  .search-input-container input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary-hover);
-  }
-  .search-input-container button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background: var(--primary);
-    color: #fff;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: var(--transition);
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .search-input-container button:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
-  }
-  .search-input-container button:active {
-    transform: translateY(0);
-  }
-  #searchResults {
-    overflow-y: auto;
-    padding: 0 0.75rem;
-  }
-  .search-result {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-    border: 1px solid transparent;
-  }
-  .search-result:hover {
-    background: var(--glass-bg);
-    border-color: var(--glass-border);
-    transform: translateX(8px);
-  }
-  .search-result-thumbnail {
-    width: 160px;
-    height: 90px;
-    border-radius: var(--border-radius);
-    object-fit: cover;
-  }
-  .search-result-info {
-    flex: 1;
-    color: var(--text);
-  }
-  .search-result-title {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .search-result-channel {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  /* ==========================================================================  
-     ANIMATIONS
-     ========================================================================== */
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-      opacity: 0.3;
+    /* ==========================================================================  
+       ROOT VARIABLES & GLOBAL SETTINGS -
+       ========================================================================== */
+    :root {
+      --primary: #fe2c55;
+      --primary-hover: #ff4d70;
+      --secondary: #25f4ee;
+      --background: #121212;
+      --surface: #1e1e1e;
+      --text: #ffffff;
+      --text-secondary: #a8a8a8;
+      --trust-high: #22c55e;
+      --trust-medium: #f59e0b;
+      --trust-low: #ef4444;
+      --glass-bg: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.05);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --font-base: 'Inter', sans-serif;
+      --border-radius: 8px;
+      --modal-radius: 20px 20px 0 0;
+      --padding: 1rem;
     }
-    50% {
-      transform: scale(1.5);
-      opacity: 0.1;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 0.3;
-    }
-  }
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .loader {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--text);
-    border-bottom-color: transparent;
-    border-radius: 50%;
-    display: inline-block;
-    animation: rotation 1s linear infinite;
-  }
-  @keyframes rotation {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
 
-  /* ==========================================================================  
-     CUSTOM SCROLLBAR (WEBKIT)
-     ========================================================================== */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--surface);
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--glass-bg);
-    border-radius: 4px;
-    border: 2px solid var(--surface);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--glass-border);
-  }
+    /* ==========================================================================  
+       GLOBAL RESET & BASE STYLES
+       ========================================================================== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  /* ==========================================================================  
-     RESPONSIVE DESIGN & DEVICE FIT
-     ========================================================================== */
-  @media (max-width: 1024px) {
+    body {
+      font-family: var(--font-base);
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.5;
+      overflow: hidden;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================================================  
+       MAIN CONTAINER & SCROLL SETTINGS
+       ========================================================================== */
+    .app-container {
+      width: 100%;
+      height: 100vh;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      position: relative;
+      scrollbar-width: none;
+    }
+    .app-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* ==========================================================================  
+       VIDEO FEED & CONTAINERS
+       ========================================================================== */
+    #videos {
+      display: flex;
+      flex-direction: column;
+    }
+    .video-container {
+      position: relative;
+      height: 100vh;
+      scroll-snap-align: start;
+      background: var(--surface);
+      overflow: hidden;
+      will-change: transform;
+    }
+    .video-container iframe {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ==========================================================================  
+       VIDEO INFO OVERLAY & TEXT STYLES
+       ========================================================================== */
     .video-info {
-      padding: 1rem;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.95));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
-    .side-actions {
-      right: 0.75rem;
-      bottom: 10rem;
-    }
-    .action-icon {
-      width: 52px;
-      height: 52px;
-      font-size: 1.3rem;
-    }
-  }
-  @media (max-width: 768px) {
-    .search-result-thumbnail {
-      width: 120px;
-      height: 68px;
-    }
-    .video-info {
-      padding: 0.75rem;
-    }
-    .side-actions {
-      right: 0.5rem;
-      bottom: 9rem;
-    }
-    .action-icon {
-      width: 48px;
-      height: 48px;
-      font-size: 1.2rem;
-    }
-  }
-  @media (max-width: 480px) {
-    .search-result-thumbnail {
-      width: 100px;
-      height: 56px;
-    }
-    .search-result-title {
-      font-size: 0.9rem;
-    }
-    .video-info {
-      padding: 0.5rem;
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
     }
     .user-avatar {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      border: 2px solid var(--primary);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
     }
     .username {
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    .caption {
       font-size: 1rem;
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
+    .video-stats {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    /* ==========================================================================  
+       AI ANALYSIS CARD, TRUST SCORE, SUMMARY & DETAILED ANALYSIS
+       ========================================================================== */
+    .ai-analysis {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: fadeIn 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+    .trust-score {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .trust-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 0 10px currentColor;
+    }
+    .trust-indicator::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      background: inherit;
+      opacity: 0.3;
+      animation: pulse 2s infinite;
+    }
+    .high-trust {
+      background: var(--trust-high);
+      color: var(--trust-high);
+    }
+    .medium-trust {
+      background: var(--trust-medium);
+      color: var(--trust-medium);
+    }
+    .low-trust {
+      background: var(--trust-low);
+      color: var(--trust-low);
+    }
+    .ai-explanation {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+      display: none;
+    }
+    /* Video Summary */
+    .ai-summary {
+      margin-top: 1rem;
+    }
+    .summary-btn {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+    }
+    .summary-btn:hover {
+      background: var(--primary-hover);
+    }
+    .summary-content {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    /* ==========================================================================  
+       SIDE ACTION BUTTONS (LIKE, COMMENT, FACT-CHECK, ANALYSIS, CHANNEL)
+       ========================================================================== */
     .side-actions {
-      right: 0.25rem;
-      bottom: 8.5rem;
+      position: absolute;
+      right: 1rem;
+      bottom: 11.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      z-index: 10;
+      padding: 0.25rem;
     }
-  }
+    .action-button {
+      background: none;
+      border: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      transition: var(--transition);
+      padding: 0.25rem;
+    }
+    .action-button:hover {
+      transform: scale(1.1);
+    }
+    .action-button:active {
+      transform: scale(0.95);
+    }
+    .action-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: var(--transition);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .like-btn.liked .action-icon {
+      background: var(--primary);
+      border-color: var(--primary-hover);
+      color: var(--trust-high);
+      box-shadow: 0 0 15px var(--primary);
+    }
+    .action-button:hover .action-icon {
+      background: var(--primary);
+      border-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+    .action-count {
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ==========================================================================  
+       NAVIGATION BAR
+       ========================================================================== */
+    .navigation {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--surface);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+      border-top: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.2);
+    }
+    .nav-item {
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: var(--transition);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+    }
+    .nav-item:hover {
+      color: var(--text);
+      transform: translateY(-2px);
+      background: var(--glass-bg);
+    }
+    .nav-icon {
+      font-size: 1.2rem;
+    }
+    .nav-item.active {
+      color: var(--primary);
+      position: relative;
+    }
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0.25rem;
+      height: 0.25rem;
+      background: var(--primary);
+      border-radius: 50%;
+    }
+
+    /* ==========================================================================  
+       MODAL SECTIONS: COMMENTS, LIKED VIDEOS, SEARCH & DETAILED ANALYSIS
+       ========================================================================== */
+    .comments-section,
+    .liked-videos-section,
+    .search-section {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: var(--modal-radius);
+      padding: 1.5rem;
+      transition: var(--transition);
+      z-index: 1000;
+      overflow-y: auto;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .comments-section,
+    .liked-videos-section {
+      height: 70%;
+      transform: translateY(100%);
+    }
+    .comments-section.show,
+    .liked-videos-section.show {
+      transform: translateY(0);
+    }
+    .search-section {
+      height: 100%;
+      background: var(--background);
+      transform: translateY(-100%);
+    }
+    .search-section.show {
+      transform: translateY(0);
+    }
+    .comments-header,
+    .liked-videos-header,
+    .search-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .comments-title,
+    .liked-videos-title,
+    .search-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .close-comments,
+    .close-liked-videos,
+    .close-search {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+    .close-comments:hover,
+    .close-liked-videos:hover,
+    .close-search:hover {
+      background: var(--glass-bg);
+      transform: rotate(90deg);
+    }
+
+    /* --------------------------------------------------------------------------
+       NEW: Detailed Analysis Modal (for video/channel analysis)
+       -------------------------------------------------------------------------- */
+    .detailed-analysis-section {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: var(--modal-radius);
+      padding: 1.5rem;
+      transition: var(--transition);
+      z-index: 1000;
+      overflow-y: auto;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      height: 70%;
+      transform: translateY(100%);
+    }
+    .detailed-analysis-section.show {
+      transform: translateY(0);
+    }
+    .detailed-analysis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .detailed-analysis-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .close-detailed-analysis {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+    .close-detailed-analysis:hover {
+      background: var(--glass-bg);
+      transform: rotate(90deg);
+    }
+    #copyAnalysis {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      padding: 0.5rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 1rem;
+      display: block;
+    }
+    #copyAnalysis:hover {
+      background: var(--primary-hover);
+    }
+
+    /* ==========================================================================  
+       COMMENTS LIST & COMMENT ITEMS
+       ========================================================================== */
+    #commentsList {
+      max-height: 60%;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      padding-right: 0.5rem;
+    }
+    .comment {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 0.5rem;
+      border-radius: 12px;
+      animation: slideInUp 0.3s ease;
+      transition: var(--transition);
+    }
+    .comment:hover {
+      background: var(--glass-bg);
+    }
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      border: 1px solid var(--glass-border);
+    }
+    .comment-content {
+      flex: 1;
+    }
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .comment-username {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .comment-time {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .comment-text {
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
+    .new-comment {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: var(--glass-bg);
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+    }
+    .new-comment input {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--glass-border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+    .new-comment input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-hover);
+    }
+    .new-comment button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    .new-comment button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+    .new-comment button:active {
+      transform: translateY(0);
+    }
+
+    /* ==========================================================================  
+       LIKED VIDEOS SECTION
+       ========================================================================== */
+    #likedVideosList .liked-video {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    #likedVideosList .liked-video:hover {
+      background: var(--glass-bg);
+      transform: translateX(8px);
+    }
+    .liked-video-thumbnail {
+      width: 120px;
+      height: 68px;
+      border-radius: var(--border-radius);
+      object-fit: cover;
+    }
+    .liked-video-info {
+      flex: 1;
+    }
+    .liked-video-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .liked-video-channel {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================  
+       SEARCH SECTION
+       ========================================================================== */
+    .search-input-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background: var(--glass-bg);
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+    }
+    .search-input-container input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--glass-border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+    .search-input-container input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-hover);
+    }
+    .search-input-container button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .search-input-container button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+    .search-input-container button:active {
+      transform: translateY(0);
+    }
+    #searchResults {
+      overflow-y: auto;
+      padding: 0 0.75rem;
+    }
+    .search-result {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+    .search-result:hover {
+      background: var(--glass-bg);
+      border-color: var(--glass-border);
+      transform: translateX(8px);
+    }
+    .search-result-thumbnail {
+      width: 160px;
+      height: 90px;
+      border-radius: var(--border-radius);
+      object-fit: cover;
+    }
+    .search-result-info {
+      flex: 1;
+      color: var(--text);
+    }
+    .search-result-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .search-result-channel {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ==========================================================================  
+       ANIMATIONS
+       ========================================================================== */
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.5); opacity: 0.1; }
+      100% { transform: scale(1); opacity: 0.3; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .loader {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--text);
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      animation: rotation 1s linear infinite;
+    }
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ==========================================================================  
+       CUSTOM SCROLLBAR (WEBKIT)
+       ========================================================================== */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track {
+      background: var(--surface);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--glass-bg);
+      border-radius: 4px;
+      border: 2px solid var(--surface);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--glass-border);
+    }
+
+    /* ==========================================================================  
+       RESPONSIVE DESIGN & DEVICE FIT
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .video-info { padding: 1rem; }
+      .side-actions { right: 0.75rem; bottom: 10rem; }
+      .action-icon { width: 52px; height: 52px; font-size: 1.3rem; }
+    }
+    @media (max-width: 768px) {
+      .search-result-thumbnail { width: 120px; height: 68px; }
+      .video-info { padding: 0.75rem; }
+      .side-actions { right: 0.5rem; bottom: 9rem; }
+      .action-icon { width: 48px; height: 48px; font-size: 1.2rem; }
+    }
+    @media (max-width: 480px) {
+      .search-result-thumbnail { width: 100px; height: 56px; }
+      .search-result-title { font-size: 0.9rem; }
+      .video-info { padding: 0.5rem; }
+      .user-avatar { width: 36px; height: 36px; }
+      .username { font-size: 1rem; }
+      .side-actions { right: 0.25rem; bottom: 8.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -771,11 +794,14 @@
       <div class="comments-title">Comments</div>
       <button class="close-comments" id="closeComments"><i class="fas fa-times"></i></button>
     </div>
-    <div id="commentsList">
-      <!-- Comments will be inserted here -->
+    <!-- Comments Sentiment Analysis -->
+    <div class="comments-sentiment">
+      <button id="analyzeComments">Analyze Comments Sentiment</button>
+      <div id="commentsSentimentResult"></div>
     </div>
+    <div id="commentsList"></div>
     <div class="new-comment">
-      <input type="text" id="commentInput" placeholder="Add a comment..." />
+      <input type="text" id="commentInput" placeholder="Add a comment...">
       <button id="submitComment">Post</button>
     </div>
   </div>
@@ -786,9 +812,7 @@
       <div class="liked-videos-title">Liked Videos</div>
       <button class="close-liked-videos" id="closeLikedVideos"><i class="fas fa-times"></i></button>
     </div>
-    <div id="likedVideosList">
-      <!-- Liked videos will be loaded here -->
-    </div>
+    <div id="likedVideosList"></div>
   </div>
 
   <!-- Search Section -->
@@ -798,12 +822,20 @@
       <button class="close-search" id="closeSearch"><i class="fas fa-times"></i></button>
     </div>
     <div class="search-input-container">
-      <input type="text" id="searchInput" placeholder="Enter search query..." />
+      <input type="text" id="searchInput" placeholder="Enter search query...">
       <button id="executeSearch">Search</button>
     </div>
-    <div id="searchResults">
-      <!-- Search results will be displayed here -->
+    <div id="searchResults"></div>
+  </div>
+
+  <!-- Detailed Analysis Modal (used for both video and channel analysis) -->
+  <div class="detailed-analysis-section" id="detailedAnalysisSection">
+    <div class="detailed-analysis-header">
+      <div class="detailed-analysis-title">Detailed Analysis</div>
+      <button class="close-detailed-analysis" id="closeDetailedAnalysis"><i class="fas fa-times"></i></button>
     </div>
+    <div id="detailedAnalysisContent"></div>
+    <button id="copyAnalysis" title="Copy analysis to clipboard"><i class="fas fa-copy"></i> Copy Analysis</button>
   </div>
 
   <!-- Navigation Bar -->
@@ -822,83 +854,45 @@
     </a>
   </div>
 
-  <!-- Load the YouTube IFrame API -->
+  <!-- Load YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     /*****************************************
-     * COOKIE HELPER FUNCTIONS (with encoding)
+     * CACHING FUNCTIONS USING LOCALSTORAGE
      *****************************************/
-    function setCookie(name, value, days) {
-      let expires = "";
-      if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-      }
-      document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=/";
+    function cacheAIResponse(key, value, expirationMinutes = 1440) {
+      const now = new Date().getTime();
+      const item = { value: value, expiry: now + expirationMinutes * 60 * 1000 };
+      localStorage.setItem(key, JSON.stringify(item));
     }
-
-    function getCookie(name) {
-      const nameEQ = encodeURIComponent(name) + "=";
-      const ca = document.cookie.split(';');
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(nameEQ) === 0) {
-          return decodeURIComponent(c.substring(nameEQ.length));
+    function getCachedAIResponse(key) {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) return null;
+      try {
+        const item = JSON.parse(itemStr);
+        const now = new Date().getTime();
+        if (now > item.expiry) {
+          localStorage.removeItem(key);
+          return null;
         }
+        return item.value;
+      } catch (e) {
+        return null;
       }
-      return null;
-    }
-
-    function eraseCookie(name) {   
-      document.cookie = encodeURIComponent(name) + '=; Max-Age=-99999999; path=/';
-    }
-
-    /*****************************************
-     * LOCAL STORAGE HELPERS FOR LIKED VIDEOS
-     *****************************************/
-    function getLikedVideosFromStorage() {
-      const data = localStorage.getItem("likedVideos");
-      return data ? JSON.parse(data) : [];
-    }
-
-    function saveLikedVideosToStorage(videos) {
-      localStorage.setItem("likedVideos", JSON.stringify(videos));
-    }
-
-    function addLikedVideo(videoData) {
-      const videos = getLikedVideosFromStorage();
-      // Avoid duplicates
-      if (!videos.find(v => v.videoId === videoData.videoId)) {
-        videos.push(videoData);
-        saveLikedVideosToStorage(videos);
-      }
-    }
-
-    function removeLikedVideo(videoId) {
-      let videos = getLikedVideosFromStorage();
-      videos = videos.filter(v => v.videoId !== videoId);
-      saveLikedVideosToStorage(videos);
     }
 
     /*****************************************
      * GLOBAL VARIABLES & CONFIGURATION
      *****************************************/
-    let players = [];         // Array to store YT.Player objects
-    let playerIdCounter = 0;  // Unique ID counter for players
-    const API_KEY = 'AIzaSyAK7FK5VPVKea0cxj2kqCDiwl92fjYLXVs';  // Replace with your own API key
-    const SEARCH_QUERIES = [
-      "government news", "politics news", "news", 
-      "elections news", "technology news", "conspiracy theories"
-    ];
-    // For comments – track which video is being commented on.
+    let players = [];
+    let playerIdCounter = 0;
+    const API_KEY = 'AIzaSyCTePB1WLpoveNVjyncJ_uCmVutawmUaM0';
+    const SEARCH_QUERIES = ["government news", "politics news", "news", "elections news", "technology news", "conspiracy theories"];
     let currentCommentVideoId = null;
-
-    // Global cache to store pre-fetched videos
     let videoCache = [];
 
     /*****************************************
-     * UTILITY: Shuffle an array (Fisher–Yates)
+     * UTILITY: Shuffle an Array
      *****************************************/
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -911,25 +905,23 @@
     /*****************************************
      * FETCH VIDEOS FROM YOUTUBE DATA API
      *****************************************/
-    // Preload a large batch of videos and store in videoCache.
     async function preloadVideos(batchSize = 50) {
       const query = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
       const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${batchSize}&q=${encodeURIComponent(query)}&key=${API_KEY}`;
       try {
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
-        if (searchData.items && searchData.items.length) {
-          const videoIds = searchData.items.map(item => item.id.videoId).join(",");
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+        if (data.items) {
+          const videoIds = data.items.map(item => item.id.videoId).join(",");
           const videos = await fetchVideoDetails(videoIds);
           videoCache = shuffleArray(videos);
         }
       } catch (err) {
-        console.error("Error preloading videos:", err);
+        console.error("Preload error:", err);
       }
     }
-
     async function fetchVideoDetails(videoIds) {
-      const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&fields=items(id,snippet(channelId,title,channelTitle,thumbnails),statistics)&id=${videoIds}&key=${API_KEY}`;
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds}&key=${API_KEY}`;
       try {
         const res = await fetch(url);
         const data = await res.json();
@@ -939,29 +931,29 @@
             title: item.snippet.title,
             channelTitle: item.snippet.channelTitle,
             thumbnail: item.snippet.thumbnails.medium.url,
-            statistics: item.statistics
+            statistics: item.statistics,
+            description: item.snippet.description,
+            publishedAt: item.snippet.publishedAt
           }));
         }
         return [];
       } catch (err) {
-        console.error("Error fetching video details:", err);
+        console.error("Video details error:", err);
         return [];
       }
     }
-
-    // New function for searching videos by query
     async function searchVideos(query, count = 10) {
       const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${count}&q=${encodeURIComponent(query)}&key=${API_KEY}`;
       try {
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
-        if (searchData.items && searchData.items.length) {
-          const videoIds = searchData.items.map(item => item.id.videoId).join(",");
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+        if (data.items) {
+          const videoIds = data.items.map(item => item.id.videoId).join(",");
           return await fetchVideoDetails(videoIds);
         }
         return [];
       } catch (err) {
-        console.error("Error searching videos:", err);
+        console.error("Search error:", err);
         return [];
       }
     }
@@ -972,25 +964,20 @@
     function createVideoContainer(videoData, uniqueId) {
       const container = document.createElement("div");
       container.className = "video-container";
-      // Save key video details as data attributes.
       container.dataset.videoId = videoData.videoId;
       container.dataset.title = videoData.title;
       container.dataset.channel = videoData.channelTitle;
       container.dataset.views = videoData.statistics.viewCount || "0";
       container.dataset.thumbnail = videoData.thumbnail;
-
-      // Create placeholder for the YouTube IFrame.
       const playerDiv = document.createElement("div");
       playerDiv.id = "player-" + uniqueId;
       container.appendChild(playerDiv);
-
-      // Overlay with video info, stats, and AI analysis.
       const info = document.createElement("div");
       info.className = "video-info";
       info.innerHTML = `
         <div class="user-info">
           <div class="user-avatar">
-            <img src="${videoData.thumbnail}" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <img src="${videoData.thumbnail}" alt="thumbnail" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
           </div>
           <div>
             <div class="username">@${videoData.channelTitle}</div>
@@ -999,27 +986,36 @@
         </div>
         <div class="video-stats">Views: ${videoData.statistics.viewCount || "0"}</div>
         <div class="ai-analysis">
-          <div class="trust-score">
-            <div class="trust-indicator high-trust"></div>
+          <div class="trust-score" title="Click to toggle explanation">
+            <div class="trust-indicator"></div>
             <span>Rating in progress... <i class="fas fa-spinner loader"></i></span>
           </div>
-          <div class="ai-explanation">
-            <i class="fas fa-check-circle" style="color: var(--trust-high);"></i>
-            Video from YouTube
-          </div>
+          <div class="ai-explanation">Loading explanation...</div>
+        </div>
+        <div class="ai-summary">
+          <button class="summary-btn">Show Video Summary</button>
+          <div class="summary-content">Loading summary...</div>
         </div>
         <div class="side-actions">
-          <button class="action-button like-btn" data-video-id="${videoData.videoId}">
+          <button class="action-button like-btn" data-video-id="${videoData.videoId}" title="Like video">
             <div class="action-icon"><i class="fas fa-heart"></i></div>
             <span class="action-count">0</span>
           </button>
-          <button class="action-button comments-btn" data-video-id="${videoData.videoId}">
+          <button class="action-button comments-btn" data-video-id="${videoData.videoId}" title="View comments">
             <div class="action-icon"><i class="fas fa-comment"></i></div>
             <span class="action-count">0</span>
           </button>
-          <button class="action-button fact-check" data-video-id="${videoData.videoId}">
+          <button class="action-button fact-check" data-video-id="${videoData.videoId}" title="Verify content">
             <div class="action-icon"><i class="fas fa-check-circle"></i></div>
             <span class="action-count">Verify</span>
+          </button>
+          <button class="action-button analysis-btn" data-video-id="${videoData.videoId}" title="Detailed video analysis">
+            <div class="action-icon"><i class="fas fa-info-circle"></i></div>
+            <span class="action-count">Analysis</span>
+          </button>
+          <button class="action-button channel-analysis-btn" data-video-id="${videoData.videoId}" title="Analyze channel">
+            <div class="action-icon"><i class="fas fa-user-circle"></i></div>
+            <span class="action-count">Channel</span>
           </button>
         </div>
       `;
@@ -1033,175 +1029,208 @@
     function initPlayer(uniqueId, videoData) {
       const player = new YT.Player("player-" + uniqueId, {
         videoId: videoData.videoId,
-        playerVars: {
-          autoplay: 0,
-          controls: 1,
-          playsinline: 1,
-          modestbranding: 1,
-          rel: 0
-        },
+        playerVars: { autoplay: 0, controls: 1, playsinline: 1, modestbranding: 1, rel: 0 },
         events: {
           onReady: () => {
             const container = document.getElementById("player-" + uniqueId).closest('.video-container');
             player.container = container;
             players.push(player);
           },
-          onError: (event) => {
-            console.error("YT Player error:", event.data);
-          }
+          onError: (e) => { console.error("YT Error:", e.data); }
         }
       });
     }
 
     /*****************************************
-     * AUTOMATIC RATING UPDATE FUNCTION
+     * UPDATE VIDEO TRUST RATING
      *****************************************/
     function updateVideoRating(container, videoData, forceUpdate = false) {
       const analysis = container.querySelector(".ai-analysis");
       const trustScoreSpan = analysis.querySelector(".trust-score span");
       const explanationDiv = analysis.querySelector(".ai-explanation");
-      
-      // Check for cached values (via cookies)
-      const cachedRating = getCookie("rating_" + videoData.videoId);
-      const cachedExplanation = getCookie("explanation_" + videoData.videoId);
-      
-      if (cachedRating && cachedExplanation && !forceUpdate) {
-        trustScoreSpan.textContent = `Trust Score: ${cachedRating}% (click for details)`;
-        updateTrustIndicator(trustScoreSpan, Number(cachedRating));
-        explanationDiv.textContent = cachedExplanation;
-      } else {
-        trustScoreSpan.innerHTML = `Rating in progress... <i class="fas fa-spinner loader"></i>`;
-        explanationDiv.textContent = "";
-        // Call the new function to get both rating and explanation.
-        getGeminiRatingAndExplanation(videoData, forceUpdate).then(result => {
-          // Animate the trust score update.
-          animateRating(trustScoreSpan, 0, result.rating, 1000);
-          // After the animation, update the explanation text.
-          setTimeout(() => {
-            explanationDiv.textContent = result.explanation;
-          }, 1000);
-        });
+      const cacheKey = "ai_rating_" + videoData.videoId;
+      const cached = !forceUpdate && getCachedAIResponse(cacheKey);
+      if (cached) {
+        trustScoreSpan.textContent = `Trust Score: ${cached.rating}% (click for details)`;
+        explanationDiv.textContent = cached.explanation;
+        updateTrustIndicator(trustScoreSpan, Number(cached.rating));
+        return;
       }
+      trustScoreSpan.innerHTML = `Rating in progress... <i class="fas fa-spinner loader"></i>`;
+      explanationDiv.textContent = "";
+      getGeminiRatingAndExplanation(videoData, forceUpdate).then(result => {
+        animateRating(trustScoreSpan, 0, result.rating, 1000);
+        setTimeout(() => { explanationDiv.textContent = result.explanation; }, 1000);
+        cacheAIResponse(cacheKey, result, 1440);
+      });
     }
 
     /*****************************************
-     * DYNAMIC RATING ANIMATION FUNCTIONS
+     * ANIMATE RATING
      *****************************************/
     function animateRating(ratingElement, start, end, duration) {
       let startTime = null;
       function step(timestamp) {
         if (!startTime) startTime = timestamp;
         const progress = timestamp - startTime;
-        const progressRatio = Math.min(progress / duration, 1);
-        const currentValue = Math.round(start + (end - start) * progressRatio);
-        ratingElement.textContent = `Trust Score: ${currentValue}%`;
-        if (progress < duration) {
-          window.requestAnimationFrame(step);
-        } else {
+        const ratio = Math.min(progress / duration, 1);
+        const current = Math.round(start + (end - start) * ratio);
+        ratingElement.textContent = `Trust Score: ${current}%`;
+        if (progress < duration) requestAnimationFrame(step);
+        else {
           ratingElement.textContent = `Trust Score: ${end}% (click for details)`;
           updateTrustIndicator(ratingElement, end);
         }
       }
-      window.requestAnimationFrame(step);
+      requestAnimationFrame(step);
+    }
+    function updateTrustIndicator(ratingElement, rating) {
+      const indicator = ratingElement.parentElement.querySelector(".trust-indicator");
+      indicator.classList.remove("high-trust", "medium-trust", "low-trust");
+      if (rating >= 80) indicator.classList.add("high-trust");
+      else if (rating >= 50) indicator.classList.add("medium-trust");
+      else indicator.classList.add("low-trust");
     }
 
-    function updateTrustIndicator(ratingElement, rating) {
-      const trustIndicator = ratingElement.parentElement.querySelector('.trust-indicator');
-      if (!trustIndicator) return;
-      trustIndicator.classList.remove("high-trust", "medium-trust", "low-trust");
-      if (rating >= 80) {
-        trustIndicator.classList.add("high-trust");
-      } else if (rating >= 50) {
-        trustIndicator.classList.add("medium-trust");
-      } else {
-        trustIndicator.classList.add("low-trust");
-      }
-    }
-    
+    /*****************************************
+     * AI FEATURES: Gemini API CALLS
+     *****************************************/
     async function getGeminiRatingAndExplanation(videoData, forceUpdate = false) {
-      // If not forcing an update, check for cached rating and explanation
-      if (!forceUpdate) {
-        const cachedRating = getCookie("rating_" + videoData.videoId);
-        const cachedExplanation = getCookie("explanation_" + videoData.videoId);
-        if (cachedRating && cachedExplanation) {
-          return { rating: Number(cachedRating), explanation: cachedExplanation };
-        }
-      }
-      
-      // Get current date and time for extra context
       const now = new Date();
-      const currentDateString = now.toLocaleDateString('en-US', { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-      });
-    
-      // Set up the Gemini API call (replace geminiApiKey with your valid key if needed)
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       const geminiModel = 'gemini-2.0-flash-thinking-exp-01-21';
       const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
-      
-      // Build a prompt that includes extra context such as the current date and time.
-      // The output is expected to have the rating on the first line and the explanation on the following lines.
-      const promptText = `Please evaluate the following YouTube video for credibility, factual accuracy, and trustworthiness.
-    
-    Video Title: "${videoData.title}"
-    Channel: "${videoData.channelTitle}"
-    Thumbnail URL: ${videoData.thumbnail}
-    Description: ${videoData.description || "No description available."}
-    Published At: ${videoData.publishedAt || "Unknown"}
-    Views: ${videoData.statistics.viewCount || "0"}
-    Likes: ${videoData.statistics.likeCount || "N/A"}
-    Comments: ${videoData.statistics.commentCount || "N/A"}
-    
-    Evaluation Context:
-    Current Date: ${currentDateString}
-    
-    Provide on the first line a numeric rating from 0 (not credible) to 100 (highly credible).
-    On the following lines, give a concise explanation (100 words or less) for the rating.`;
-    
-      const promptPayload = {
-        contents: [
-          {
-            parts: [
-              { text: promptText }
-            ]
-          }
-        ]
-      };
-    
+      const promptText = `Evaluate the following YouTube video and provide a structured analysis.
+Title: "${videoData.title}"
+Channel: "${videoData.channelTitle}"
+Thumbnail: ${videoData.thumbnail}
+Description: ${videoData.description || "No description available."}
+Published At: ${videoData.publishedAt || "Unknown"}
+Views: ${videoData.statistics.viewCount || "0"}
+Current Date: ${dateStr}
+
+Output format:
+Rating: <number from 0-100>
+Explanation: <concise explanation in 50 words or less>`;
+      const payload = { contents: [ { parts: [ { text: promptText } ] } ] };
       try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(promptPayload)
-        });
-        if (!response.ok) {
-          throw new Error(`API responded with status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (!data.candidates || data.candidates.length === 0) {
-          throw new Error("Invalid response structure from Gemini API.");
-        }
-        
-        // Parse the API response.
-        // We expect the first line to contain the numeric rating, and the remaining lines to be the explanation.
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error("Gemini API error: " + res.status);
+        const data = await res.json();
+        if (!data.candidates || data.candidates.length === 0) throw new Error("No response");
         const output = data.candidates[0].content.parts[0].text;
-        const lines = output.trim().split('\n').filter(line => line.trim() !== "");
-        let rating = 0;
-        let explanation = "";
+        const lines = output.split("\n").map(l => l.trim()).filter(Boolean);
+        let rating = 0, explanation = "";
         if (lines.length > 0) {
-          const ratingMatch = lines[0].match(/(\d+(\.\d+)?)/);
-          rating = ratingMatch ? Number(ratingMatch[1]) : 0;
-          explanation = lines.slice(1).join(' ').trim();
+          // Try parsing the first line as a number
+          let potentialRating = parseInt(lines[0]);
+          if (!isNaN(potentialRating)) {
+            rating = potentialRating;
+          } else {
+            const ratingMatch = lines[0].match(/Rating:\s*(\d+)/i);
+            rating = ratingMatch ? Number(ratingMatch[1]) : 0;
+          }
+          const explMatch = output.match(/Explanation:\s*(.+)/i);
+          explanation = explMatch ? explMatch[1] : "No explanation provided.";
         }
-        
-        // Cache the results in cookies (for 1 day)
-        setCookie("rating_" + videoData.videoId, rating, 1);
-        setCookie("explanation_" + videoData.videoId, explanation, 1);
-        
         return { rating, explanation };
-      } catch (error) {
-        console.error("Error getting Gemini rating and explanation:", error);
-        return { rating: 0, explanation: "Error occurred while fetching explanation." };
+      } catch (err) {
+        console.error("Rating error:", err);
+        return { rating: 0, explanation: "Error fetching AI rating." };
+      }
+    }
+
+    async function getGeminiVideoSummary(videoData) {
+      const geminiModel = 'gemini-2.0-flash-thinking-exp-01-21';
+      const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+      const promptText = `Provide a concise summary (50 words or less) for the video.
+Title: "${videoData.title}"
+Channel: "${videoData.channelTitle}"
+Description: "${videoData.description || 'No description available.'}"`;
+      const payload = { contents: [ { parts: [ { text: promptText } ] } ] };
+      try {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error("Gemini API error: " + res.status);
+        const data = await res.json();
+        if (!data.candidates || data.candidates.length === 0) throw new Error("No response");
+        const output = data.candidates[0].content.parts[0].text;
+        return output.split("\n")[0].trim();
+      } catch (err) {
+        console.error("Summary error:", err);
+        return "Error fetching summary.";
+      }
+    }
+
+    async function getGeminiCommentsSentiment(commentsArray) {
+      const geminiModel = 'gemini-2.0-flash-thinking-exp-01-21';
+      const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+      const commentsText = commentsArray.join(" | ");
+      const promptText = `Analyze the sentiment of these comments and provide a concise summary (50 words or less):
+${commentsText}`;
+      const payload = { contents: [ { parts: [ { text: promptText } ] } ] };
+      try {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error("Gemini API error: " + res.status);
+        const data = await res.json();
+        if (!data.candidates || data.candidates.length === 0) throw new Error("No response");
+        const output = data.candidates[0].content.parts[0].text;
+        return output.split("\n")[0].trim();
+      } catch (err) {
+        console.error("Sentiment error:", err);
+        return "Error analyzing comments.";
+      }
+    }
+
+    async function getDetailedAIAnalysis(videoData) {
+      const geminiModel = 'gemini-2.0-flash-thinking-exp-01-21';
+      const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+      const promptText = `Provide a detailed analysis (100 words or less) of the following video using this format:
+---
+Credibility Rating: <0-100>
+Explanation: <brief explanation>
+Misinformation Flags: <if any>
+Topics: <list topics>
+Fact-check Recommendations: <suggestions>
+Summary: <overall summary>
+---
+Video details:
+Title: "${videoData.title}"
+Channel: "${videoData.channelTitle}"
+Thumbnail: ${videoData.thumbnail}
+Description: ${videoData.description || "No description available."}
+Views: ${videoData.statistics.viewCount || "0"}`;
+      const payload = { contents: [ { parts: [ { text: promptText } ] } ] };
+      try {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error("Gemini API error: " + res.status);
+        const data = await res.json();
+        if (!data.candidates || data.candidates.length === 0) throw new Error("No response");
+        return data.candidates[0].content.parts[0].text;
+      } catch (err) {
+        console.error("Detailed analysis error:", err);
+        return "Error fetching detailed analysis.";
+      }
+    }
+
+    async function getChannelAnalysis(videoData) {
+      const geminiModel = 'gemini-2.0-flash-thinking-exp-01-21';
+      const geminiApiKey = 'AIzaSyCnMRMwFGVlPufyLDdEpFG4clySwFB3dBc';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
+      const promptText = `Analyze the credibility and content quality of the YouTube channel "${videoData.channelTitle}". Consider content consistency, biases, and reputation. Provide your analysis in 50 words or less.`;
+      const payload = { contents: [ { parts: [ { text: promptText } ] } ] };
+      try {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error("Gemini API error: " + res.status);
+        const data = await res.json();
+        if (!data.candidates || data.candidates.length === 0) throw new Error("No response");
+        return data.candidates[0].content.parts[0].text;
+      } catch (err) {
+        console.error("Channel analysis error:", err);
+        return "Error fetching channel analysis.";
       }
     }
 
@@ -1211,19 +1240,11 @@
     function loadComments(videoId) {
       const commentsList = document.getElementById("commentsList");
       commentsList.innerHTML = "";
-      const commentCookie = getCookie("comments_" + videoId);
-      let comments = [];
-      if (commentCookie) {
-        try {
-          comments = JSON.parse(commentCookie);
-        } catch (e) {
-          console.error("Error parsing comments cookie:", e);
-        }
-      }
+      const comments = JSON.parse(localStorage.getItem("comments_" + videoId) || "[]");
       comments.forEach(comment => {
-        const commentEl = document.createElement("div");
-        commentEl.className = "comment";
-        commentEl.innerHTML = `
+        const el = document.createElement("div");
+        el.className = "comment";
+        el.innerHTML = `
           <div class="comment-avatar"><i class="fas fa-user"></i></div>
           <div class="comment-content">
             <div class="comment-header">
@@ -1233,35 +1254,53 @@
             <div class="comment-text">${comment.text}</div>
           </div>
         `;
-        commentsList.appendChild(commentEl);
+        commentsList.appendChild(el);
       });
     }
-
     function updateCommentCount(videoId) {
-      const commentCookie = getCookie("comments_" + videoId);
-      let count = 0;
-      if (commentCookie) {
-        try {
-          const comments = JSON.parse(commentCookie);
-          count = comments.length;
-        } catch (e) {
-          console.error(e);
+      const comments = JSON.parse(localStorage.getItem("comments_" + videoId) || "[]");
+      const count = comments.length;
+      const btn = document.querySelector(`.comments-btn[data-video-id="${videoId}"]`);
+      if (btn) btn.querySelector(".action-count").textContent = count;
+    }
+
+    /*****************************************
+     * ATTACH TOGGLES FOR SUMMARY & TRUST SCORE
+     *****************************************/
+    function attachSummaryToggle(container, videoData) {
+      const summaryBtn = container.querySelector(".summary-btn");
+      const summaryContent = container.querySelector(".summary-content");
+      summaryBtn.addEventListener("click", async () => {
+        if (summaryContent.style.display === "none" || summaryContent.style.display === "") {
+          summaryBtn.textContent = "Loading summary...";
+          const summary = await getGeminiVideoSummary(videoData);
+          summaryContent.textContent = summary;
+          summaryContent.style.display = "block";
+          summaryBtn.textContent = "Hide Video Summary";
+        } else {
+          summaryContent.style.display = "none";
+          summaryBtn.textContent = "Show Video Summary";
         }
-      }
-      const commentBtn = document.querySelector(`.comments-btn[data-video-id="${videoId}"]`);
-      if (commentBtn) {
-        commentBtn.querySelector(".action-count").textContent = count;
+      });
+    }
+    function attachTrustScoreToggle(container) {
+      const trustScoreElem = container.querySelector(".trust-score");
+      if (trustScoreElem) {
+        trustScoreElem.style.cursor = "pointer";
+        trustScoreElem.addEventListener("click", () => {
+          const explanationDiv = container.querySelector(".ai-explanation");
+          explanationDiv.style.display = explanationDiv.style.display === "block" ? "none" : "block";
+        });
       }
     }
 
     /*****************************************
-     * INTERACTIONS: LIKES, COMMENTS, FACT-CHECK & NAVIGATION
+     * INTERACTIONS & MODAL HANDLERS
      *****************************************/
     function initInteractions() {
-      document.addEventListener("click", (event) => {
-        // Handle Like button toggle.
-        if (event.target.closest(".like-btn")) {
-          const btn = event.target.closest(".like-btn");
+      document.addEventListener("click", (e) => {
+        if (e.target.closest(".like-btn")) {
+          const btn = e.target.closest(".like-btn");
           const videoId = btn.dataset.videoId;
           const container = btn.closest(".video-container");
           const videoData = {
@@ -1271,31 +1310,28 @@
             thumbnail: container.dataset.thumbnail,
             statistics: { viewCount: container.dataset.views }
           };
-          if (getCookie("like_" + videoId) === "true") {
-            eraseCookie("like_" + videoId);
+          const liked = localStorage.getItem("like_" + videoId) === "true";
+          if (liked) {
+            localStorage.removeItem("like_" + videoId);
             btn.classList.remove("liked");
             btn.querySelector(".action-count").textContent = "0";
             removeLikedVideo(videoId);
           } else {
-            setCookie("like_" + videoId, "true", 30);
+            localStorage.setItem("like_" + videoId, "true");
             btn.classList.add("liked");
             btn.querySelector(".action-count").textContent = "1";
             addLikedVideo(videoData);
           }
         }
-
-        // Open comments section.
-        if (event.target.closest(".comments-btn")) {
-          const btn = event.target.closest(".comments-btn");
+        if (e.target.closest(".comments-btn")) {
+          const btn = e.target.closest(".comments-btn");
           currentCommentVideoId = btn.dataset.videoId;
           loadComments(currentCommentVideoId);
           document.getElementById("commentsSection").classList.add("show");
         }
-
-        // Fact-check: force update the Gemini rating.
-        if (event.target.closest(".fact-check")) {
-          const button = event.target.closest(".fact-check");
-          const container = button.closest(".video-container");
+        if (e.target.closest(".fact-check")) {
+          const btn = e.target.closest(".fact-check");
+          const container = btn.closest(".video-container");
           const videoData = {
             videoId: container.dataset.videoId,
             title: container.dataset.title,
@@ -1304,51 +1340,77 @@
           };
           updateVideoRating(container, videoData, true);
         }
-
-        // Navigation: open Search and Liked Videos modals.
-        if (event.target.closest("#navSearch")) {
+        if (e.target.closest(".analysis-btn")) {
+          const btn = e.target.closest(".analysis-btn");
+          const container = btn.closest(".video-container");
+          const videoData = {
+            videoId: container.dataset.videoId,
+            title: container.dataset.title,
+            channelTitle: container.dataset.channel,
+            thumbnail: container.dataset.thumbnail,
+            statistics: { viewCount: container.dataset.views }
+          };
+          const modal = document.getElementById("detailedAnalysisSection");
+          modal.querySelector(".detailed-analysis-title").textContent = "Detailed Analysis";
+          const contentDiv = document.getElementById("detailedAnalysisContent");
+          contentDiv.textContent = "Loading detailed analysis...";
+          modal.classList.add("show");
+          getDetailedAIAnalysis(videoData).then(analysis => {
+            contentDiv.textContent = analysis;
+          });
+        }
+        if (e.target.closest(".channel-analysis-btn")) {
+          const btn = e.target.closest(".channel-analysis-btn");
+          const container = btn.closest(".video-container");
+          const videoData = {
+            videoId: container.dataset.videoId,
+            title: container.dataset.title,
+            channelTitle: container.dataset.channel,
+            thumbnail: container.dataset.thumbnail,
+            statistics: { viewCount: container.dataset.views }
+          };
+          const modal = document.getElementById("detailedAnalysisSection");
+          modal.querySelector(".detailed-analysis-title").textContent = "Channel Analysis";
+          const contentDiv = document.getElementById("detailedAnalysisContent");
+          contentDiv.textContent = "Loading channel analysis...";
+          modal.classList.add("show");
+          getChannelAnalysis(videoData).then(analysis => {
+            contentDiv.textContent = analysis;
+          });
+        }
+        if (e.target.closest("#navSearch")) {
           document.getElementById("searchSection").classList.add("show");
         }
-        if (event.target.closest("#navLiked")) {
+        if (e.target.closest("#navLiked")) {
           loadLikedVideos();
           document.getElementById("likedVideosSection").classList.add("show");
         }
-
-        // Clicking a liked video scrolls to or appends it.
-        if (event.target.closest(".liked-video")) {
-          const likedVideoEl = event.target.closest(".liked-video");
-          const videoId = likedVideoEl.dataset.videoId;
-          const existingContainer = document.querySelector(`.video-container[data-video-id="${videoId}"]`);
-          if (existingContainer) {
-            existingContainer.scrollIntoView({ behavior: "smooth" });
-          } else {
-            appendVideoToFeed(videoId, likedVideoEl.dataset);
-          }
+        if (e.target.closest(".liked-video")) {
+          const el = e.target.closest(".liked-video");
+          const videoId = el.dataset.videoId;
+          const existing = document.querySelector(`.video-container[data-video-id="${videoId}"]`);
+          if (existing) existing.scrollIntoView({ behavior: "smooth" });
+          else appendVideoToFeed(videoId, el.dataset);
           document.getElementById("likedVideosSection").classList.remove("show");
         }
-
-        // Clicking a search result.
-        if (event.target.closest(".search-result")) {
-          const resultEl = event.target.closest(".search-result");
-          const videoId = resultEl.dataset.videoId;
-          const existingContainer = document.querySelector(`.video-container[data-video-id="${videoId}"]`);
-          if (existingContainer) {
-            existingContainer.scrollIntoView({ behavior: "smooth" });
-          } else {
+        if (e.target.closest(".search-result")) {
+          const el = e.target.closest(".search-result");
+          const videoId = el.dataset.videoId;
+          const existing = document.querySelector(`.video-container[data-video-id="${videoId}"]`);
+          if (existing) existing.scrollIntoView({ behavior: "smooth" });
+          else {
             const videoData = {
-              videoId: resultEl.dataset.videoId,
-              title: resultEl.dataset.title,
-              channelTitle: resultEl.dataset.channel,
-              thumbnail: resultEl.dataset.thumbnail,
-              statistics: { viewCount: resultEl.dataset.views }
+              videoId: el.dataset.videoId,
+              title: el.dataset.title,
+              channelTitle: el.dataset.channel,
+              thumbnail: el.dataset.thumbnail,
+              statistics: { viewCount: el.dataset.views }
             };
             appendVideoToFeedObj(videoData);
           }
           document.getElementById("searchSection").classList.remove("show");
         }
       });
-
-      // Close modals.
       document.getElementById("closeComments").addEventListener("click", () => {
         document.getElementById("commentsSection").classList.remove("show");
       });
@@ -1358,49 +1420,62 @@
       document.getElementById("closeSearch").addEventListener("click", () => {
         document.getElementById("searchSection").classList.remove("show");
       });
-
-      // Post a new comment.
+      document.getElementById("closeDetailedAnalysis").addEventListener("click", () => {
+        document.getElementById("detailedAnalysisSection").classList.remove("show");
+      });
       document.getElementById("submitComment").addEventListener("click", () => {
         const input = document.getElementById("commentInput");
         const text = input.value.trim();
         if (!text || !currentCommentVideoId) return;
-        const commentCookie = getCookie("comments_" + currentCommentVideoId);
-        let comments = [];
-        if (commentCookie) {
-          try {
-            comments = JSON.parse(commentCookie);
-          } catch (e) {
-            console.error(e);
-          }
-        }
+        const comments = JSON.parse(localStorage.getItem("comments_" + currentCommentVideoId) || "[]");
         comments.push({ text, timestamp: Date.now() });
-        setCookie("comments_" + currentCommentVideoId, JSON.stringify(comments), 30);
+        localStorage.setItem("comments_" + currentCommentVideoId, JSON.stringify(comments));
         input.value = "";
         loadComments(currentCommentVideoId);
         updateCommentCount(currentCommentVideoId);
       });
-
-      // Execute search.
       document.getElementById("executeSearch").addEventListener("click", async () => {
         const query = document.getElementById("searchInput").value.trim();
         if (!query) return;
         const results = await searchVideos(query, 10);
         displaySearchResults(results);
       });
+      document.getElementById("analyzeComments").addEventListener("click", async () => {
+        const comments = JSON.parse(localStorage.getItem("comments_" + currentCommentVideoId) || "[]").map(c => c.text);
+        if (comments.length === 0) {
+          document.getElementById("commentsSentimentResult").textContent = "No comments to analyze.";
+          return;
+        }
+        document.getElementById("commentsSentimentResult").textContent = "Analyzing sentiment...";
+        const sentiment = await getGeminiCommentsSentiment(comments);
+        document.getElementById("commentsSentimentResult").textContent = sentiment;
+      });
+      document.getElementById("copyAnalysis").addEventListener("click", () => {
+        const text = document.getElementById("detailedAnalysisContent").textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Analysis copied to clipboard!");
+        });
+      });
     }
 
-    // Append video to feed from videoData.
     function appendVideoToFeedObj(videoData) {
-      const videosContainer = document.getElementById("videos");
-      const uniqueId = playerIdCounter++;
-      const container = createVideoContainer(videoData, uniqueId);
-      videosContainer.prepend(container);
-      initPlayer(uniqueId, videoData);
-      if (videoObserver) {
-        videoObserver.observe(container);
+      const container = createVideoContainer(videoData, playerIdCounter++);
+      document.getElementById("videos").prepend(container);
+      initPlayer(playerIdCounter - 1, videoData);
+      if (videoObserver) videoObserver.observe(container);
+      if (localStorage.getItem("like_" + videoData.videoId) === "true") {
+        const likeBtn = container.querySelector(".like-btn");
+        likeBtn.classList.add("liked");
+        likeBtn.querySelector(".action-count").textContent = "1";
+      }
+      const comments = JSON.parse(localStorage.getItem("comments_" + videoData.videoId) || "[]");
+      if (comments.length) {
+        const commentBtn = container.querySelector(".comments-btn");
+        commentBtn.querySelector(".action-count").textContent = comments.length;
       }
       updateVideoRating(container, videoData);
       attachTrustScoreToggle(container);
+      attachSummaryToggle(container, videoData);
     }
 
     async function appendVideoToFeed(videoId, dataAttrs = {}) {
@@ -1425,86 +1500,67 @@
               title: item.snippet.title,
               channelTitle: item.snippet.channelTitle,
               thumbnail: item.snippet.thumbnails.medium.url,
-              statistics: item.statistics
+              statistics: item.statistics,
+              description: item.snippet.description,
+              publishedAt: item.snippet.publishedAt
             };
             appendVideoToFeedObj(videoData);
           }
         } catch (err) {
-          console.error("Error appending video to feed:", err);
+          console.error("Error appending video:", err);
         }
       }
     }
 
     function loadLikedVideos() {
-      const likedVideosList = document.getElementById("likedVideosList");
-      likedVideosList.innerHTML = "";
-      const likedVideos = getLikedVideosFromStorage();
-      if (likedVideos.length === 0) {
-        likedVideosList.innerHTML = "<p>No liked videos yet.</p>";
+      const likedVideos = JSON.parse(localStorage.getItem("likedVideos") || "[]");
+      const list = document.getElementById("likedVideosList");
+      list.innerHTML = "";
+      if (!likedVideos.length) {
+        list.innerHTML = "<p>No liked videos yet.</p>";
         return;
       }
       likedVideos.forEach(video => {
-        const videoEl = document.createElement("div");
-        videoEl.className = "liked-video";
-        videoEl.dataset.videoId = video.videoId;
-        videoEl.innerHTML = `
+        const el = document.createElement("div");
+        el.className = "liked-video";
+        el.dataset.videoId = video.videoId;
+        el.innerHTML = `
           <img src="${video.thumbnail}" alt="thumbnail" class="liked-video-thumbnail">
           <div class="liked-video-info">
             <div class="liked-video-title">${video.title}</div>
             <div class="liked-video-channel">@${video.channelTitle}</div>
           </div>
         `;
-        likedVideosList.appendChild(videoEl);
+        list.appendChild(el);
       });
     }
 
     function displaySearchResults(results) {
-      const searchResults = document.getElementById("searchResults");
-      searchResults.innerHTML = "";
-      if (results.length === 0) {
-        searchResults.innerHTML = "<p style='color: var(--text);'>No results found.</p>";
+      const container = document.getElementById("searchResults");
+      container.innerHTML = "";
+      if (!results.length) {
+        container.innerHTML = "<p style='color: var(--text);'>No results found.</p>";
         return;
       }
       results.forEach(video => {
-        const resultEl = document.createElement("div");
-        resultEl.className = "search-result";
-        resultEl.dataset.videoId = video.videoId;
-        resultEl.dataset.title = video.title;
-        resultEl.dataset.channel = video.channelTitle;
-        resultEl.dataset.thumbnail = video.thumbnail;
-        resultEl.dataset.views = video.statistics.viewCount || "0";
-        resultEl.innerHTML = `
+        const el = document.createElement("div");
+        el.className = "search-result";
+        el.dataset.videoId = video.videoId;
+        el.dataset.title = video.title;
+        el.dataset.channel = video.channelTitle;
+        el.dataset.thumbnail = video.thumbnail;
+        el.dataset.views = video.statistics.viewCount || "0";
+        el.innerHTML = `
           <img src="${video.thumbnail}" alt="thumbnail" class="search-result-thumbnail">
           <div class="search-result-info">
             <div class="search-result-title">${video.title}</div>
             <div class="search-result-channel">@${video.channelTitle}</div>
           </div>
         `;
-        searchResults.appendChild(resultEl);
+        container.appendChild(el);
       });
     }
 
-    /*****************************************
-     * ATTACH CLICK HANDLER TO TOGGLE TRUST SCORE EXPLANATION
-     *****************************************/
-    function attachTrustScoreToggle(container) {
-      const trustScoreElem = container.querySelector('.trust-score');
-      if (trustScoreElem) {
-        trustScoreElem.style.cursor = 'pointer';
-        trustScoreElem.addEventListener('click', function() {
-          const explanationDiv = container.querySelector('.ai-explanation');
-          if (explanationDiv.style.display === 'none' || explanationDiv.style.display === '') {
-             explanationDiv.style.display = 'block';
-          } else {
-             explanationDiv.style.display = 'none';
-          }
-        });
-      }
-    }
-
-    /*****************************************
-     * AUTO-PLAY / PAUSE VIA INTERSECTION OBSERVER
-     *****************************************/
     let videoObserver;
     function initVideoObserver() {
       const options = { root: null, threshold: 0.8 };
@@ -1517,14 +1573,11 @@
           });
         });
       }, options);
-      document.querySelectorAll('.video-container').forEach(container => {
+      document.querySelectorAll(".video-container").forEach(container => {
         videoObserver.observe(container);
       });
     }
 
-    /*****************************************
-     * SENTINEL OBSERVER FOR INFINITE SCROLL
-     *****************************************/
     function initSentinelObserver() {
       const sentinel = document.getElementById("sentinel");
       const observer = new IntersectionObserver((entries) => {
@@ -1537,51 +1590,16 @@
       observer.observe(sentinel);
     }
 
-    /*****************************************
-     * APPEND NEW VIDEOS FROM CACHE
-     *****************************************/
     async function appendRandomVideos(count = 5) {
-      // If our cache is low, preload more videos.
-      if (videoCache.length < count) {
-        await preloadVideos(50);
-      }
+      if (videoCache.length < count) await preloadVideos(50);
       const videosToAppend = videoCache.splice(0, count);
-      const videosContainer = document.getElementById("videos");
+      const container = document.getElementById("videos");
       for (const videoData of videosToAppend) {
-        const uniqueId = playerIdCounter++;
-        const container = createVideoContainer(videoData, uniqueId);
-        videosContainer.appendChild(container);
-        initPlayer(uniqueId, videoData);
-        if (videoObserver) {
-          videoObserver.observe(container);
-        }
-        // Update UI based on stored like/comment cookies.
-        const likeCookie = getCookie("like_" + videoData.videoId);
-        if (likeCookie === "true") {
-          const likeBtn = container.querySelector(".like-btn");
-          likeBtn.classList.add("liked");
-          likeBtn.querySelector(".action-count").textContent = "1";
-        }
-        const commentCookie = getCookie("comments_" + videoData.videoId);
-        if (commentCookie) {
-          try {
-            const commentsArr = JSON.parse(commentCookie);
-            const commentBtn = container.querySelector(".comments-btn");
-            commentBtn.querySelector(".action-count").textContent = commentsArr.length;
-          } catch (e) {
-            console.error("Error parsing comments cookie:", e);
-          }
-        }
-        updateVideoRating(container, videoData);
-        attachTrustScoreToggle(container);
+        appendVideoToFeedObj(videoData);
       }
     }
 
-    /*****************************************
-     * INITIALIZATION WHEN YOUTUBE IFRAME API IS READY
-     *****************************************/
     function onYouTubeIframeAPIReady() {
-      // Start by appending an initial batch of videos.
       appendRandomVideos(10);
       initVideoObserver();
       initSentinelObserver();
